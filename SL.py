@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+#import pdb
+
 import argparse
 import math
 from IPy import IP
@@ -77,7 +79,7 @@ def sanitycheck_options( options ):
 	# We have to calculate the number of spines or leaves before continuing
 	if options.spines:
 		spine_links = options.spines * options.spine_ports
-		options.leaves = math.ceil(spine_links / options.leaf_up_ports)
+		options.leaves = int(math.ceil(spine_links / options.leaf_up_ports))
 		if options.spines > options.leaf_up_ports:
 			raise Exception("The number of spines was specified as elif options.spines}, but this exceeds the number of --leaf-up-ports(%s) specified.\n" % options.leaf_up_ports)
 
@@ -101,23 +103,23 @@ def sanitycheck_options( options ):
 		raise Exception("--autonomous-system has to be greater than or equal to 1.\n")
 
 	# Sanity check the base prefix and p2p mask against the SL topology
-	block_base = IP(options.base_prefix, make_net=True).net()
-	#block_mask_tmp = IP(options.base_prefix, make_net=True).netmask()
-	#block_mask = get_net_size(block_mask_tmp)
+	block_base = str(IP(options.base_prefix, make_net=True).net())
 	block_mask_tmp = options.base_prefix.split('/', 1)
 	block_mask = int(block_mask_tmp[1])
 
-	p2p_links = options.leaf_up_ports * options.leaves
+	p2p_links = int(options.leaf_up_ports * options.leaves)
 	usable_links = 2**(32 - block_mask) / 2**(32 - options.p2p_mask)
 
-"""	if usable_links < p2p_links: # NEED_FIX: Gotta sort out the problem with this Format String
+	#pdb.set_trace()
+
+	if usable_links < p2p_links: # NEED_FIX: Gotta sort out the problem with this Format String
 		raise Exception("Given that this topology has %i spines and %i leaves, the total number of point-to-point links requiring L3 addressing is %i.\n \
 The prefix %s using a /%i for each point-to-point link only yields %i usable networks. There isn't enough point-to-point networks given these constraints.\n\
 There are two ways to fix this problem:\n\
 \t1) Use a larger block such as %s/16\n\
 \t2) Reduce the point-to-point mask size.\n\n\
-Hint: try again with --base-prefix=/16" % options.spines, options.leaves, p2p_links, options.base_prefix, options.p2p_mask, usable_links, block_base, block_base )
-"""
+Hint: try again with --base-prefix=%s/16" % (options.spines, options.leaves, p2p_links, options.base_prefix, options.p2p_mask, usable_links, block_base, block_base) )
+
 
 def clos (in_spine, in_leaf):
 	clos = {spine: in_spine, leaf: in_leaf}
@@ -137,10 +139,5 @@ def Int2IP(ipnum):
     o4 = int(ipnum) % 256
     return '%(o1)s.%(o2)s.%(o3)s.%(o4)s' % locals()
 
-def get_net_size(netmask):
-    binary_str = ''
-    for octet in netmask:
-        binary_str += bin(int(octet))[2:].zfill(8)
-    return str(len(binary_str.rstrip('0')))
 
 sanitycheck_options(options)
