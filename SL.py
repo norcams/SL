@@ -6,34 +6,8 @@ import argparse
 import math
 from IPy import IP
 
-import sys
-from socket import inet_aton
-
-parser = argparse.ArgumentParser()
-group = parser.add_mutually_exclusive_group(required=True)
-group.add_argument("--spines", type=int, action="store", dest="spines",
-    help="Number of spines. This cannot be used with --leaves as it will automatically calculate the number of spines. Example: --spines=4")
-group.add_argument("--leaves", type=int, action="store", dest="leaves",
-    help="Number of leaves. This cannot be used with --spines as it will automatically calculate the number of leaves Example: --leaves=16")
-parser.add_argument("--spine-speed", type=int, action="store", dest="spine_speed", required=True,
-    help="Speed of network ports in spine (1,10,40,100) Example: --spine-speed=40")
-parser.add_argument("--spine-ports", type=int, action="store", dest="spine_ports", required=True,
-    help="Number of network ports in spine Example: --spine-ports=16")
-parser.add_argument("--leaf-down-speed", type=int, action="store", dest="leaf_down_speed", required=True,
-    help="Speed of server-facing ports on the leaf (1,10,40,100) Example: --leaf-down-speed=10")
-parser.add_argument("--leaf-down-ports", type=int, action="store", dest="leaf_down_ports", required=True,
-    help="Number of server-facing ports Example: --leaf-down-ports=48")
-parser.add_argument("--leaf-up-speed", type=int, action="store", dest="leaf_up_speed", required=True,
-    help="Speed of spine-facing ports on the leaf (1,10,40,100) Example: --leaf-up-speed=40")
-parser.add_argument("--leaf-up-ports", type=int, action="store", dest="leaf_up_ports", required=True,
-    help="Number of spine-facing ports Example: --leaf-up-ports=4")
-parser.add_argument("-b", "--base-prefix", action="store", dest="base_prefix", required=True,
-    help="Base prefix and mask to be used to assign L3 addresses. Example --base-prefix=192.168/16")
-parser.add_argument("-p", "--p2p-mask", type=int, action="store", dest="p2p_mask", required=True,
-    help="Network mask to use when calculating p2p networks. Value must be between 24 and 31")
-parser.add_argument("-a", "--autonomous-system", type=int, action="store", dest="asn", required=True,
-    help="Where to begin assigning autonomous system numbers. Example: --autonomous-system=64512")
-options = parser.parse_args()
+#import sys
+#from socket import inet_aton
 
 ##
 ## Functions
@@ -44,14 +18,44 @@ def next_subnet (network, subnet):
 	inet = inet + step
 	next_ip = Int2IP(inet)
 	return (next_ip)
-
-
-
-#def generate_topology:
-
-#def calc_os:
+"""
+def generate_topology():
+	spine_int = options.spine_speed == 10 ? 'xe' : 'et'
+	block = 
+"""
+def calc_os():
+	options.os = (options.leaf_down_speed * options.leaf_down_ports) / (options.leaf_up_speed * options.leaf_up_ports)
+	return options.os
 
 #def usage:
+
+def parse_options():
+	parser = argparse.ArgumentParser()
+	group = parser.add_mutually_exclusive_group(required=True)
+	group.add_argument("--spines", type=int, action="store", dest="spines",
+	    help="Number of spines. This cannot be used with --leaves as it will automatically calculate the number of spines. Example: --spines=4")
+	group.add_argument("--leaves", type=int, action="store", dest="leaves",
+	    help="Number of leaves. This cannot be used with --spines as it will automatically calculate the number of leaves Example: --leaves=16")
+	parser.add_argument("--spine-speed", type=int, action="store", dest="spine_speed", required=True,
+	    help="Speed of network ports in spine (1,10,40,100) Example: --spine-speed=40")
+	parser.add_argument("--spine-ports", type=int, action="store", dest="spine_ports", required=True,
+	    help="Number of network ports in spine Example: --spine-ports=16")
+	parser.add_argument("--leaf-down-speed", type=int, action="store", dest="leaf_down_speed", required=True,
+	    help="Speed of server-facing ports on the leaf (1,10,40,100) Example: --leaf-down-speed=10")
+	parser.add_argument("--leaf-down-ports", type=int, action="store", dest="leaf_down_ports", required=True,
+	    help="Number of server-facing ports Example: --leaf-down-ports=48")
+	parser.add_argument("--leaf-up-speed", type=int, action="store", dest="leaf_up_speed", required=True,
+	    help="Speed of spine-facing ports on the leaf (1,10,40,100) Example: --leaf-up-speed=40")
+	parser.add_argument("--leaf-up-ports", type=int, action="store", dest="leaf_up_ports", required=True,
+	    help="Number of spine-facing ports Example: --leaf-up-ports=4")
+	parser.add_argument("-b", "--base-prefix", action="store", dest="base_prefix", required=True,
+	    help="Base prefix and mask to be used to assign L3 addresses. Example --base-prefix=192.168/16")
+	parser.add_argument("-p", "--p2p-mask", type=int, action="store", dest="p2p_mask", required=True,
+	    help="Network mask to use when calculating p2p networks. Value must be between 24 and 31")
+	parser.add_argument("-a", "--autonomous-system", type=int, action="store", dest="asn", required=True,
+	    help="Where to begin assigning autonomous system numbers. Example: --autonomous-system=64512")
+	options = parser.parse_args()
+	return options
 
 def sanitycheck_options( options ):
 	# Begin sanity checking
@@ -112,7 +116,7 @@ def sanitycheck_options( options ):
 
 	#pdb.set_trace()
 
-	if usable_links < p2p_links: # NEED_FIX: Gotta sort out the problem with this Format String
+	if usable_links < p2p_links:
 		raise Exception("Given that this topology has %i spines and %i leaves, the total number of point-to-point links requiring L3 addressing is %i.\n \
 The prefix %s using a /%i for each point-to-point link only yields %i usable networks. There isn't enough point-to-point networks given these constraints.\n\
 There are two ways to fix this problem:\n\
@@ -139,5 +143,5 @@ def Int2IP(ipnum):
     o4 = int(ipnum) % 256
     return '%(o1)s.%(o2)s.%(o3)s.%(o4)s' % locals()
 
-
+options = parse_options()
 sanitycheck_options(options)
